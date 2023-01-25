@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "ApiPractice.h"
+#include "windows.h"
 
 #define MAX_LOADSTRING 100
 
@@ -152,10 +153,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             rect.right = 200;
             rect.bottom = 120;
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-            LPCWSTR test = L"Hello World!";
+            LPCSTR test = "Hello World!";
             DrawText(hdc, test, 12, &rect, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
             EndPaint(hWnd, &ps);
         }
+        break;
+    case WM_CHAR:
+        HDC hdc;
+        static char str[100];
+
+        hdc = GetDC(hWnd);
+        str[0] = wParam;
+        str[1] = '\0';
+        TextOut(hdc, 0, 0, str, strlen(str));
+        ReleaseDC(hWnd, hdc);
         break;
     case WM_DESTROY:
         PostQuitMessage(0);
