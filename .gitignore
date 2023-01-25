@@ -30,3 +30,6 @@
 *.exe
 *.out
 *.app
+/ApiPractice/ApiPractice/x64/Release
+/ApiPractice/.vs/ApiPractice/v16
+/ApiPractice/x64/Release
