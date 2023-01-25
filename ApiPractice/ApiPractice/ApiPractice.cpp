@@ -19,7 +19,7 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 static char str[100];
-static int count;
+static int count, yPos;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -131,6 +131,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
         count = 0;
+        yPos = 0;
         break;
     case WM_COMMAND:
         {
@@ -160,9 +161,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CHAR:
         HDC hdc;
         hdc = GetDC(hWnd);
-        str[count++] = wParam;
+
+        if (wParam == VK_BACK)
+        {
+            if (count > 0)
+                count--;
+            else if (count == 0 && yPos > 0)
+                yPos -= 20;
+        }
+        else if (wParam == VK_RETURN)
+        {
+            count = 0;
+            yPos += 20;
+        }
+        else 
+        {
+            str[count++] = wParam;
+        }
         str[count] = '\0';
-        TextOut(hdc, 0, 0, str, strlen(str));
+        TextOut(hdc, 0, yPos, str, strlen(str));
         ReleaseDC(hWnd, hdc);
         break;
     case WM_DESTROY:
