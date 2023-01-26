@@ -24,6 +24,7 @@ static SIZE size;
 HPEN hPen, oldPen;
 HBRUSH hBrush, oldBrush;
 static int x, y;
+static RECT rectView;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -138,6 +139,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         count = 0;
         yPos = 0;
         x = 20, y = 20;
+        GetClientRect(hWnd, &rectView);
         break;
     case WM_COMMAND:
         {
@@ -196,10 +198,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         ReleaseDC(hWnd, hdc);
         break;
     case WM_KEYDOWN:
-        if (wParam == VK_RIGHT)
+        if (wParam == VK_RIGHT && x + 40 < rectView.right)
             x += 40;
 
-        if (wParam == VK_LEFT)
+        if (wParam == VK_LEFT && x - 40 > 0)
             x -= 40;
         InvalidateRgn(hWnd, NULL, TRUE);
         break;
