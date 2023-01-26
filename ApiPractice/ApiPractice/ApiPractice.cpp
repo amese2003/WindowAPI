@@ -140,6 +140,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         yPos = 0;
         x = 20, y = 20;
         GetClientRect(hWnd, &rectView);
+        SetTimer(hWnd, 1, 1000, NULL);
         break;
     case WM_COMMAND:
         {
@@ -205,9 +206,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             x -= 40;
         InvalidateRgn(hWnd, NULL, TRUE);
         break;
+    case WM_TIMER:
+        hdc = GetDC(hWnd);
+        TextOut(hdc, 50, 50, "AAA", 3);
+        break;
     case WM_DESTROY:
         HideCaret(hWnd);
         DestroyCaret();
+        KillTimer(hWnd, 1);
         PostQuitMessage(0);
         break;
     default:
