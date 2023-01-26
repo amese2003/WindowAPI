@@ -128,6 +128,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    POINT points[10] = { {10, 20}, {100, 30}, {500, 100}, {400, 200}, {200, 200} };
     switch (message)
     {
     case WM_CREATE:
@@ -159,7 +160,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             
             HDC hdc = BeginPaint(hWnd, &ps);
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-            Ellipse(hdc, 20, 20, 80, 80);
+            Polygon(hdc, points, 5);
             
             EndPaint(hWnd, &ps);
         }
