@@ -23,6 +23,7 @@ static int count, yPos;
 static SIZE size;
 HPEN hPen, oldPen;
 HBRUSH hBrush, oldBrush;
+static int x, y;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -136,8 +137,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
         count = 0;
         yPos = 0;
-        CreateCaret(hWnd, NULL, 5, 15);
-        ShowCaret(hWnd);
+        x = 20, y = 20;
         break;
     case WM_COMMAND:
         {
@@ -163,7 +163,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
             hBrush = CreateSolidBrush(RGB(255, 0, 0));
             oldBrush = (HBRUSH)SelectObject(hdc, hBrush);
-            Ellipse(hdc, 20, 20, 150, 150);
+            Ellipse(hdc, x - 20, y - 20, x + 20, y + 20);
             SelectObject(hdc, oldBrush);
             DeleteObject(hBrush);
             EndPaint(hWnd, &ps);
@@ -194,6 +194,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         str[count] = '\0';
         TextOut(hdc, 0, yPos, str, strlen(str));
         ReleaseDC(hWnd, hdc);
+        break;
+    case WM_KEYDOWN:
+        if (wParam == VK_RIGHT)
+            x += 40;
+
+        if (wParam == VK_LEFT)
+            x -= 40;
+        InvalidateRgn(hWnd, NULL, TRUE);
         break;
     case WM_DESTROY:
         HideCaret(hWnd);
