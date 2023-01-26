@@ -20,6 +20,7 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 static char str[100];
 static int count, yPos;
+static SIZE size;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -132,6 +133,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
         count = 0;
         yPos = 0;
+        CreateCaret(hWnd, NULL, 5, 15);
+        ShowCaret(hWnd);
         break;
     case WM_COMMAND:
         {
@@ -153,14 +156,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
+            
             HDC hdc = BeginPaint(hWnd, &ps);
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
+            
             EndPaint(hWnd, &ps);
         }
         break;
     case WM_CHAR:
         HDC hdc;
         hdc = GetDC(hWnd);
+        GetTextExtentPoint(hdc, str, strlen(str), &size);
+        SetCaretPos(size.cx, 0);
 
         if (wParam == VK_BACK)
         {
@@ -183,6 +190,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         ReleaseDC(hWnd, hdc);
         break;
     case WM_DESTROY:
+        HideCaret(hWnd);
+        DestroyCaret();
         PostQuitMessage(0);
         break;
     default:
