@@ -21,6 +21,7 @@ INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 static char str[100];
 static int count, yPos;
 static SIZE size;
+HPEN hPen, oldPen;
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -157,11 +158,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            
             HDC hdc = BeginPaint(hWnd, &ps);
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-            Polygon(hdc, points, 5);
-            
+            hPen = CreatePen(PS_DOT, 1, RGB(255, 0, 0));
+            oldPen = (HPEN)SelectObject(hdc, hPen);
+            Ellipse(hdc, 20, 20, 150, 150);
+            SelectObject(hdc, oldPen);
+            DeleteObject(hPen);
             EndPaint(hWnd, &ps);
         }
         break;
