@@ -159,39 +159,50 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             worm.push_back(Worm());
             worm[i].SetMoveDir(0);
         }
+        SetTimer(hWnd, 1, 100, NULL);
+        SetTimer(hWnd, 2, 1000, NULL);
         break;
     case WM_COMMAND:
+    {
+        int wmId = LOWORD(wParam);
+        // 메뉴 선택을 구문 분석합니다:
+        switch (wmId)
         {
-            int wmId = LOWORD(wParam);
-            // 메뉴 선택을 구문 분석합니다:
-            switch (wmId)
-            {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
+        case IDM_ABOUT:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+        case IDM_EXIT:
+            DestroyWindow(hWnd);
+            break;
+        default:
+            return DefWindowProc(hWnd, message, wParam, lParam);
         }
-        break;
+    }
+    break;
     case WM_PAINT:
+    {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hWnd, &ps);
+        // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
+
+        for (int i = 0; i < worm.size(); i++)
         {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-            
-            for (int i = 0; i < 5; i++)
-            {
-                Ellipse(hdc, worm[i].GetPosX() * 20, worm[i].GetPosY() * 20, worm[i].GetPosX() * 20 + 20, worm[i].GetPosY() * 20 + 20);
-            }
-            
-            
-            EndPaint(hWnd, &ps);
+            Ellipse(hdc, worm[i].GetPosX() * 20, worm[i].GetPosY() * 20, worm[i].GetPosX() * 20 + 20, worm[i].GetPosY() * 20 + 20);
         }
-        break;
+
+        for (int i = 0; i <= 20; i++)
+        {
+            Rectangle(hdc, 20 * i, 0, 20 * i + 20, 20);
+            Rectangle(hdc, 0, 20 * i, 20, 20 * i + 20);
+
+            Rectangle(hdc, 20 * i, 400, 20 * i + 20, 420);
+            Rectangle(hdc, 400, 20 * i, 420, 20 * i + 20);
+        }
+
+
+        EndPaint(hWnd, &ps);
+    }
+    break;
     case WM_LBUTTONDOWN:
         break;
     case WM_LBUTTONUP:
@@ -206,29 +217,43 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_KEYDOWN:
         worm[0].SetMoveDir(wParam);
-        SetTimer(hWnd, 1, 100, NULL);
+
         InvalidateRgn(hWnd, NULL, TRUE);
         break;
     case WM_TIMER:
         hdc = GetDC(hWnd);
         wormNext = worm[0].ExpectNext();
 
-        if (wormNext.first > 0 && wormNext.first < 20 && wormNext.second > 0 && wormNext.second < 20)
-        { 
-            for (int i = worm.size(); i > 0; i--)
+        switch (wParam)
+        {
+        case 1:
+            if (wormNext.first > 0 && wormNext.first < 20 && wormNext.second > 0 && wormNext.second < 20)
             {
-                worm[i].SetPosX(worm[i - 1].GetPosX());
-                worm[i].SetPosY(worm[i - 1].GetPosY());
+                for (int i = worm.size(); i > 0; i--)
+                {
+                    worm[i].SetPosX(worm[i - 1].GetPosX());
+                    worm[i].SetPosY(worm[i - 1].GetPosY());
+                }
+
+                worm[0].MoveNext();
             }
 
-            worm[0].MoveNext();
+            
+            break;
+
+        case 2:
+            worm.push_back(Worm(worm[worm.size() - 1].GetPosX(), worm[worm.size() - 1].GetPosY()));
+            break;
         }
+
+        
         
 
         InvalidateRgn(hWnd, NULL, TRUE);
         break;
     case WM_DESTROY:
         KillTimer(hWnd, 1);
+        KillTimer(hWnd, 2);
         PostQuitMessage(0);
         break;
     default:

@@ -3,6 +3,7 @@ class Worm
 {
 public:
 	Worm() : _radius(10), _size(1), _posX(1), _posY(1), _moveDir(0), _moving(false) {};
+	Worm(int posX, int posY) : _radius(10), _size(1), _posX(posX), _posY(posY), _moveDir(0), _moving(false) {};
 
 public:
 	int GetPosX();
