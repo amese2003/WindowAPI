@@ -4,8 +4,10 @@
 #include "framework.h"
 #include "ApiPractice.h"
 #include "windows.h"
+#include <math.h>
 
 #define MAX_LOADSTRING 100
+#define BSIZE 40
 
 // 전역 변수:
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
@@ -24,7 +26,22 @@ static SIZE size;
 HPEN hPen, oldPen;
 HBRUSH hBrush, oldBrush;
 static int x, y;
+static BOOL selection;
+int mx, my;
 static RECT rectView;
+
+double LengthPts(int x1, int y1, int x2, int y2)
+{
+    return (sqrt((float)((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1))));
+}
+
+BOOL InCircle(int x, int y, int mx, int my)
+{
+    if (LengthPts(x, y, mx, my) < BSIZE)
+        return TRUE;
+
+    return FALSE;
+}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -132,15 +149,16 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    POINT points[10] = { {10, 20}, {100, 30}, {500, 100}, {400, 200}, {200, 200} };
+
+    
+
     switch (message)
     {
     case WM_CREATE:
         count = 0;
         yPos = 0;
-        x = 20, y = 20;
+        x = 50, y = 50;
         GetClientRect(hWnd, &rectView);
-        SetTimer(hWnd, 1, 1000, NULL);
         break;
     case WM_COMMAND:
         {
@@ -164,56 +182,36 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-            hBrush = CreateSolidBrush(RGB(255, 0, 0));
-            oldBrush = (HBRUSH)SelectObject(hdc, hBrush);
-            Ellipse(hdc, x - 20, y - 20, x + 20, y + 20);
-            SelectObject(hdc, oldBrush);
-            DeleteObject(hBrush);
+            if (selection)
+                Rectangle(hdc, x - BSIZE, y - BSIZE, x + BSIZE, y + BSIZE);
+            
+            Ellipse(hdc, x - BSIZE, y - BSIZE, x + BSIZE, y + BSIZE);
             EndPaint(hWnd, &ps);
         }
+        break;
+    case WM_LBUTTONDOWN:
+        mx = LOWORD(lParam);
+        my = HIWORD(lParam);
+        if (InCircle(x, y, mx, my))
+            selection = TRUE;
+        InvalidateRgn(hWnd, NULL, TRUE);
+        break;
+    case WM_LBUTTONUP:
+        selection = FALSE;
+        InvalidateRect(hWnd, NULL, TRUE);
         break;
     case WM_CHAR:
         HDC hdc;
         hdc = GetDC(hWnd);
-        GetTextExtentPoint(hdc, str, strlen(str), &size);
-        SetCaretPos(size.cx, 0);
-
-        if (wParam == VK_BACK)
-        {
-            if (count > 0)
-                count--;
-            else if (count == 0 && yPos > 0)
-                yPos -= 20;
-        }
-        else if (wParam == VK_RETURN)
-        {
-            count = 0;
-            yPos += 20;
-        }
-        else 
-        {
-            str[count++] = wParam;
-        }
-        str[count] = '\0';
-        TextOut(hdc, 0, yPos, str, strlen(str));
         ReleaseDC(hWnd, hdc);
         break;
     case WM_KEYDOWN:
-        if (wParam == VK_RIGHT && x + 40 < rectView.right)
-            x += 40;
-
-        if (wParam == VK_LEFT && x - 40 > 0)
-            x -= 40;
-        InvalidateRgn(hWnd, NULL, TRUE);
         break;
     case WM_TIMER:
         hdc = GetDC(hWnd);
         TextOut(hdc, 50, 50, "AAA", 3);
         break;
     case WM_DESTROY:
-        HideCaret(hWnd);
-        DestroyCaret();
-        KillTimer(hWnd, 1);
         PostQuitMessage(0);
         break;
     default:
