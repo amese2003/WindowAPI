@@ -1,6 +1,7 @@
 ﻿// ApiPractice.cpp : 애플리케이션에 대한 진입점을 정의합니다.
 //
 
+#include "pch.h"
 #include "framework.h"
 #include "ApiPractice.h"
 #include "windows.h"
@@ -20,15 +21,7 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-static char str[100];
-static int count, yPos;
-static SIZE size;
-HPEN hPen, oldPen;
-HBRUSH hBrush, oldBrush;
-static int x, y;
-static BOOL selection;
-int mx, my;
-static RECT rectView;
+vector<Worm> worm;
 
 double LengthPts(int x1, int y1, int x2, int y2)
 {
@@ -149,16 +142,23 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-
+    HDC hdc;
+    PAINTSTRUCT ps;
+    static int startX, startY, oldX, oldY;
+    static BOOL Drag;
+    int endX, endY;
+    pair<int, int> wormNext;
+    
     
 
     switch (message)
     {
     case WM_CREATE:
-        count = 0;
-        yPos = 0;
-        x = 50, y = 50;
-        GetClientRect(hWnd, &rectView);
+        for (int i = 0; i < 5; i++)
+        {
+            worm.push_back(Worm());
+            worm[i].SetMoveDir(0);
+        }
         break;
     case WM_COMMAND:
         {
@@ -182,36 +182,53 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-            if (selection)
-                Rectangle(hdc, x - BSIZE, y - BSIZE, x + BSIZE, y + BSIZE);
             
-            Ellipse(hdc, x - BSIZE, y - BSIZE, x + BSIZE, y + BSIZE);
+            for (int i = 0; i < 5; i++)
+            {
+                Ellipse(hdc, worm[i].GetPosX() * 20, worm[i].GetPosY() * 20, worm[i].GetPosX() * 20 + 20, worm[i].GetPosY() * 20 + 20);
+            }
+            
+            
             EndPaint(hWnd, &ps);
         }
         break;
     case WM_LBUTTONDOWN:
-        mx = LOWORD(lParam);
-        my = HIWORD(lParam);
-        if (InCircle(x, y, mx, my))
-            selection = TRUE;
-        InvalidateRgn(hWnd, NULL, TRUE);
         break;
     case WM_LBUTTONUP:
-        selection = FALSE;
-        InvalidateRect(hWnd, NULL, TRUE);
+        break;
+    case WM_MOUSEMOVE:
+        hdc = GetDC(hWnd);
+        ReleaseDC(hWnd, hdc);
         break;
     case WM_CHAR:
-        HDC hdc;
         hdc = GetDC(hWnd);
         ReleaseDC(hWnd, hdc);
         break;
     case WM_KEYDOWN:
+        worm[0].SetMoveDir(wParam);
+        SetTimer(hWnd, 1, 100, NULL);
+        InvalidateRgn(hWnd, NULL, TRUE);
         break;
     case WM_TIMER:
         hdc = GetDC(hWnd);
-        TextOut(hdc, 50, 50, "AAA", 3);
+        wormNext = worm[0].ExpectNext();
+
+        if (wormNext.first > 0 && wormNext.first < 20 && wormNext.second > 0 && wormNext.second < 20)
+        { 
+            for (int i = worm.size(); i > 0; i--)
+            {
+                worm[i].SetPosX(worm[i - 1].GetPosX());
+                worm[i].SetPosY(worm[i - 1].GetPosY());
+            }
+
+            worm[0].MoveNext();
+        }
+        
+
+        InvalidateRgn(hWnd, NULL, TRUE);
         break;
     case WM_DESTROY:
+        KillTimer(hWnd, 1);
         PostQuitMessage(0);
         break;
     default:
