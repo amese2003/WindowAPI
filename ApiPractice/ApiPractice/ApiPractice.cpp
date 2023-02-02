@@ -148,8 +148,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     char str[100], lpstrFile[100] = "";
     char filter[] = "Every File(*.*) \0*.*\0Text File\0*.txt;*.doc\0";
     HDC hdc;
-
     PAINTSTRUCT ps;
+
     CHOOSEFONT FONT;
     CHOOSECOLOR COLOR;
     static COLORREF temp[16], color;
@@ -159,14 +159,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     static HMENU hMenu, hSubMenu;
 
+    int mx, my;
+    static BOOL Select;
+    static BOOL Copy;
+    static int x, y;
+
     switch (message)
     {
     case WM_CREATE:
         hMenu = GetMenu(hWnd);
-        hSubMenu = GetSubMenu(hMenu, 2);
-        EnableMenuItem(hSubMenu, ID_COLORDLG, MF_GRAYED);
-        EnableMenuItem(hSubMenu, ID_FONTDLG, MF_GRAYED);
+        hSubMenu = GetSubMenu(hMenu, 1);
+        Select = FALSE;
+        Copy = FALSE;
+        x = 50, y = 50;
         break;
+
+    case WM_LBUTTONDOWN:
+        mx = LOWORD(lParam);
+        my = HIWORD(lParam);
+        if (InCircle(x, y, mx, my))
+            Select = TRUE;
+
+        InvalidateRgn(hWnd, NULL, TRUE);
+        break;
+
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
@@ -175,6 +191,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+
+        case ID_EDITCOPY:
+            Copy = TRUE;
+            InvalidateRgn(hWnd, NULL, TRUE);
             break;
 
         case ID_COLORDLG:
@@ -224,7 +245,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 MessageBox(hWnd, str, "저장하기 선택", MB_OK);
             }
             break;
-            break;
 
         case IDM_EXIT:
 
@@ -239,24 +259,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_PAINT:
     {
+        EnableMenuItem(hSubMenu, ID_EDITCOPY, Select ? MF_ENABLED : MF_GRAYED);
+        EnableMenuItem(hSubMenu, ID_EDITPASTE, Copy ? MF_ENABLED : MF_GRAYED);
+
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
         // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-        hBrush = CreateSolidBrush(color);
-        OldBrush = (HBRUSH)SelectObject(hdc, hBrush);
-        Ellipse(hdc, 10, 10, 200, 200);
-        SelectObject(hdc, OldBrush);
-        DeleteObject(hBrush);
+        
 
+        if (Select)
+            Rectangle(hdc, x - BSIZE, y - BSIZE, x + BSIZE, y + BSIZE);
 
+        Ellipse(hdc, x - BSIZE, y - BSIZE, x + BSIZE, y + BSIZE);
         EndPaint(hWnd, &ps);
     }
     break;
     
     
 
-    case WM_LBUTTONDOWN:
-        break;
+    
     case WM_LBUTTONUP:
         break;
     case WM_MOUSEMOVE:
