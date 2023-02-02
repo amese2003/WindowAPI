@@ -179,7 +179,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 wsprintf(str, "%s 파일을 열겠습니카", OFN.lpstrFile);
                 MessageBox(hWnd, str, "열기 선택", MB_OK);
             }
-
+            break;
+        case ID_FILESAVE:
+            memset(&OFN, 0, sizeof(OPENFILENAME));
+            OFN.lStructSize = sizeof(OPENFILENAME);
+            OFN.hwndOwner = hWnd;
+            OFN.lpstrFilter = filter;
+            OFN.lpstrFile = lpstrFile;
+            OFN.nMaxFile = 100;
+            OFN.lpstrInitialDir = ".";
+            if (GetSaveFileName(&OFN) != 0)
+            {
+                wsprintf(str, "%s 파일을 저장하시겠습니카", OFN.lpstrFile);
+                MessageBox(hWnd, str, "저장하기 선택", MB_OK);
+            }
+            break;
             break;
 
         case IDM_EXIT:
