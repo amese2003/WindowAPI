@@ -149,6 +149,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     char filter[] = "Every File(*.*) \0*.*\0Text File\0*.txt;*.doc\0";
     HDC hdc;
 
+    PAINTSTRUCT ps;
+    CHOOSEFONT FONT;
+    static COLORREF fColor;
+    HFONT hFont, OldFont;
+    static LOGFONT LogFont;
+
     switch (message)
     {
     case WM_CREATE:
@@ -161,6 +167,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+
+        case ID_FONTDLG:
+            memset(&FONT, 0, sizeof(CHOOSEFONT));
+            FONT.lStructSize = sizeof(CHOOSEFONT);
+            FONT.hwndOwner = hWnd;
+            FONT.lpLogFont = &LogFont;
+            FONT.Flags = CF_EFFECTS | CF_SCREENFONTS;
+            if (ChooseFont(&FONT) != 0)
+            {
+                fColor = FONT.rgbColors;
+                InvalidateRgn(hWnd, NULL, TRUE);
+            }
             break;
 
         case ID_FILENEW:
@@ -212,8 +231,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
         // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-
-
+        hFont = CreateFontIndirect(&LogFont);
+        OldFont = (HFONT)SelectObject(hdc, hFont);
+        SetTextColor(hdc, fColor);
+        TextOut(hdc, 10, 10, "HelloWorld", 10);
+        SelectObject(hdc, OldFont);
+        DeleteObject(hFont);
 
 
         EndPaint(hWnd, &ps);
