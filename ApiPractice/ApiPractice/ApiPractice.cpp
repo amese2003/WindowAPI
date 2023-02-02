@@ -151,9 +151,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     PAINTSTRUCT ps;
     CHOOSEFONT FONT;
-    static COLORREF fColor;
+    CHOOSECOLOR COLOR;
+    static COLORREF temp[16], color;
     HFONT hFont, OldFont;
     static LOGFONT LogFont;
+    HBRUSH hBrush, OldBrush;
 
     switch (message)
     {
@@ -169,15 +171,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
 
-        case ID_FONTDLG:
-            memset(&FONT, 0, sizeof(CHOOSEFONT));
-            FONT.lStructSize = sizeof(CHOOSEFONT);
-            FONT.hwndOwner = hWnd;
-            FONT.lpLogFont = &LogFont;
-            FONT.Flags = CF_EFFECTS | CF_SCREENFONTS;
-            if (ChooseFont(&FONT) != 0)
+        case ID_COLORDLG:
+            for (int i = 0; i < 16; i++)
+                temp[i] = RGB(rand() % 256, rand() % 256, rand() % 256);
+
+            memset(&COLOR, 0, sizeof(CHOOSECOLOR));
+            COLOR.lStructSize = sizeof(CHOOSECOLOR);
+            COLOR.hwndOwner = hWnd;
+            COLOR.lpCustColors = temp;
+            COLOR.Flags = CC_FULLOPEN;
+            if (ChooseColor(&COLOR) != 0)
             {
-                fColor = FONT.rgbColors;
+                color = COLOR.rgbResult;
                 InvalidateRgn(hWnd, NULL, TRUE);
             }
             break;
@@ -231,17 +236,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
         // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-        hFont = CreateFontIndirect(&LogFont);
-        OldFont = (HFONT)SelectObject(hdc, hFont);
-        SetTextColor(hdc, fColor);
-        TextOut(hdc, 10, 10, "HelloWorld", 10);
-        SelectObject(hdc, OldFont);
-        DeleteObject(hFont);
+        hBrush = CreateSolidBrush(color);
+        OldBrush = (HBRUSH)SelectObject(hdc, hBrush);
+        Ellipse(hdc, 10, 10, 200, 200);
+        SelectObject(hdc, OldBrush);
+        DeleteObject(hBrush);
 
 
         EndPaint(hWnd, &ps);
     }
     break;
+    
+    
+
     case WM_LBUTTONDOWN:
         break;
     case WM_LBUTTONUP:
