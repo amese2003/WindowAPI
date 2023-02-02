@@ -177,6 +177,8 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="ApiPractice.ico" />
+    <Image Include="bitmap1.bmp" />
+    <Image Include="example.bmp" />
     <Image Include="small.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

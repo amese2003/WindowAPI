@@ -147,7 +147,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     OPENFILENAME OFN;
     char str[100], lpstrFile[100] = "";
     char filter[] = "Every File(*.*) \0*.*\0Text File\0*.txt;*.doc\0";
-    HDC hdc;
+    HDC hdc, memdc;
     PAINTSTRUCT ps;
 
     CHOOSEFONT FONT;
@@ -164,14 +164,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     static BOOL Copy;
     static int x, y;
 
+    static HBITMAP hBitmap;
+
     switch (message)
     {
     case WM_CREATE:
-        hMenu = GetMenu(hWnd);
-        hSubMenu = GetSubMenu(hMenu, 1);
-        Select = FALSE;
-        Copy = FALSE;
-        x = 50, y = 50;
+        hBitmap = (HBITMAP)LoadBitmap(((LPCREATESTRUCT)lParam)->hInstance, MAKEINTRESOURCE(IDB_RUMINE));
         break;
 
     case WM_LBUTTONDOWN:
@@ -259,18 +257,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_PAINT:
     {
-        EnableMenuItem(hSubMenu, ID_EDITCOPY, Select ? MF_ENABLED : MF_GRAYED);
-        EnableMenuItem(hSubMenu, ID_EDITPASTE, Copy ? MF_ENABLED : MF_GRAYED);
 
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
         // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
         
+        memdc = CreateCompatibleDC(hdc);
+        SelectObject(memdc, hBitmap);
+        BitBlt(hdc, 0, 0, 621, 671, memdc, 0, 0, SRCCOPY);
+        DeleteDC(memdc);
 
-        if (Select)
-            Rectangle(hdc, x - BSIZE, y - BSIZE, x + BSIZE, y + BSIZE);
-
-        Ellipse(hdc, x - BSIZE, y - BSIZE, x + BSIZE, y + BSIZE);
         EndPaint(hWnd, &ps);
     }
     break;
