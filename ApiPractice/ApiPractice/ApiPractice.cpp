@@ -7,6 +7,7 @@
 #include "windows.h"
 #include <math.h>
 #include "resource.h"
+#include <commdlg.h>
 
 #define MAX_LOADSTRING 100
 #define BSIZE 40
@@ -143,13 +144,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int answer = 0;
-    
+    OPENFILENAME OFN;
+    char str[100], lpstrFile[100] = "";
+    char filter[] = "Every File(*.*) \0*.*\0Text File\0*.txt;*.doc\0";
     HDC hdc;
 
     switch (message)
     {
     case WM_CREATE:
-
         break;
     case WM_COMMAND:
     {
@@ -163,6 +165,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         case ID_FILENEW:
             MessageBox(hWnd, "새파일?", "새 파일 선택", MB_OKCANCEL);
+            break;
+        case ID_FILEOPEN:
+            memset(&OFN, 0, sizeof(OPENFILENAME));
+            OFN.lStructSize = sizeof(OPENFILENAME);
+            OFN.hwndOwner = hWnd;
+            OFN.lpstrFilter = filter;
+            OFN.lpstrFile = lpstrFile;
+            OFN.nMaxFile = 100;
+            OFN.lpstrInitialDir = ".";
+            if (GetOpenFileName(&OFN) != 0)
+            {
+                wsprintf(str, "%s 파일을 열겠습니카", OFN.lpstrFile);
+                MessageBox(hWnd, str, "열기 선택", MB_OK);
+            }
+
             break;
 
         case IDM_EXIT:
