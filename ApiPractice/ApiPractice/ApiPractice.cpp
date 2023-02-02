@@ -6,6 +6,7 @@
 #include "ApiPractice.h"
 #include "windows.h"
 #include <math.h>
+#include "resource.h"
 
 #define MAX_LOADSTRING 100
 #define BSIZE 40
@@ -21,7 +22,6 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-vector<Worm> worm;
 
 double LengthPts(int x1, int y1, int x2, int y2)
 {
@@ -142,25 +142,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    int answer = 0;
+    
     HDC hdc;
-    PAINTSTRUCT ps;
-    static int startX, startY, oldX, oldY;
-    static BOOL Drag;
-    int endX, endY;
-    pair<int, int> wormNext;
-    
-    
 
     switch (message)
     {
     case WM_CREATE:
-        for (int i = 0; i < 5; i++)
-        {
-            worm.push_back(Worm());
-            worm[i].SetMoveDir(0);
-        }
-        SetTimer(hWnd, 1, 100, NULL);
-        SetTimer(hWnd, 2, 1000, NULL);
+
         break;
     case WM_COMMAND:
     {
@@ -171,8 +160,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
+
+        case ID_FILENEW:
+            MessageBox(hWnd, "새파일?", "새 파일 선택", MB_OKCANCEL);
+            break;
+
         case IDM_EXIT:
-            DestroyWindow(hWnd);
+
+            answer = MessageBox(hWnd, "파일 선택 확인", "끝내기 선택", MB_YESNO);
+            if (answer == IDYES)
+                DestroyWindow(hWnd);
             break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
@@ -185,19 +182,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         HDC hdc = BeginPaint(hWnd, &ps);
         // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
 
-        for (int i = 0; i < worm.size(); i++)
-        {
-            Ellipse(hdc, worm[i].GetPosX() * 20, worm[i].GetPosY() * 20, worm[i].GetPosX() * 20 + 20, worm[i].GetPosY() * 20 + 20);
-        }
 
-        for (int i = 0; i <= 20; i++)
-        {
-            Rectangle(hdc, 20 * i, 0, 20 * i + 20, 20);
-            Rectangle(hdc, 0, 20 * i, 20, 20 * i + 20);
-
-            Rectangle(hdc, 20 * i, 400, 20 * i + 20, 420);
-            Rectangle(hdc, 400, 20 * i, 420, 20 * i + 20);
-        }
 
 
         EndPaint(hWnd, &ps);
@@ -216,35 +201,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         ReleaseDC(hWnd, hdc);
         break;
     case WM_KEYDOWN:
-        worm[0].SetMoveDir(wParam);
 
         InvalidateRgn(hWnd, NULL, TRUE);
         break;
     case WM_TIMER:
         hdc = GetDC(hWnd);
-        wormNext = worm[0].ExpectNext();
-
-        switch (wParam)
-        {
-        case 1:
-            if (wormNext.first > 0 && wormNext.first < 20 && wormNext.second > 0 && wormNext.second < 20)
-            {
-                for (int i = worm.size(); i > 0; i--)
-                {
-                    worm[i].SetPosX(worm[i - 1].GetPosX());
-                    worm[i].SetPosY(worm[i - 1].GetPosY());
-                }
-
-                worm[0].MoveNext();
-            }
-
-            
-            break;
-
-        case 2:
-            worm.push_back(Worm(worm[worm.size() - 1].GetPosX(), worm[worm.size() - 1].GetPosY()));
-            break;
-        }
 
         
         
@@ -252,8 +213,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         InvalidateRgn(hWnd, NULL, TRUE);
         break;
     case WM_DESTROY:
-        KillTimer(hWnd, 1);
-        KillTimer(hWnd, 2);
         PostQuitMessage(0);
         break;
     default:
