@@ -157,9 +157,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     static LOGFONT LogFont;
     HBRUSH hBrush, OldBrush;
 
+    static HMENU hMenu, hSubMenu;
+
     switch (message)
     {
     case WM_CREATE:
+        hMenu = GetMenu(hWnd);
+        hSubMenu = GetSubMenu(hMenu, 2);
+        EnableMenuItem(hSubMenu, ID_COLORDLG, MF_GRAYED);
+        EnableMenuItem(hSubMenu, ID_FONTDLG, MF_GRAYED);
         break;
     case WM_COMMAND:
     {
