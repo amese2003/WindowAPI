@@ -158,8 +158,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 
-INT_PTR CALLBACK Dlg6_lProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK Dlg6_lProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    HDC hdc;
+
     switch (message)
     {
     case WM_INITDIALOG:
@@ -167,11 +169,22 @@ INT_PTR CALLBACK Dlg6_lProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
     case WM_COMMAND:
         switch (LOWORD(wParam))
         {
+        case ID_BUTTON_PRINT:
+            hdc = GetDC(hWnd);
+            TextOut(hdc, 0, 0, "Hello world!", 11);
+            ReleaseDC(hWnd, hdc);
+            break;;
+
+        case ID_BUTTON_CANCEL:
+            EndDialog(hWnd, 0);
+            break;
+
+
         case IDOK:
-            EndDialog(hDlg, 0);
+            EndDialog(hWnd, 0);
             break;
         case IDCANCEL:
-            EndDialog(hDlg, 0);
+            EndDialog(hWnd, 0);
             break;
         }
 
@@ -289,7 +302,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_LBUTTONDOWN:
-        DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, About);
+        DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, Dlg6_lProc);
         break;
     case WM_DESTROY:
         if (hBit1)
