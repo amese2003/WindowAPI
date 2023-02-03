@@ -162,6 +162,7 @@ INT_PTR CALLBACK Dlg6_lProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 {
     HDC hdc;
     HWND hButton;
+    char word[100];
 
     switch (message)
     {
@@ -172,22 +173,15 @@ INT_PTR CALLBACK Dlg6_lProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     case WM_COMMAND:
         switch (LOWORD(wParam))
         {
-        case ID_START:
-            hButton = GetDlgItem(hWnd, ID_START);
-            EnableWindow(hButton, FALSE);
-            hButton = GetDlgItem(hWnd, ID_PAUSE);
-            EnableWindow(hButton, TRUE);
-            break;
-        case ID_PAUSE:
-            hButton = GetDlgItem(hWnd, ID_PAUSE);
-            EnableWindow(hButton, FALSE);
-            hButton = GetDlgItem(hWnd, ID_START);
-            EnableWindow(hButton, TRUE);
-            break;
-        case ID_CLOSE:
-            EndDialog(hWnd, 0);
+        case ID_BUTTON_COPY:
+            GetDlgItemText(hWnd, IDC_EDIT_SOURCE, word, 100);
+            SetDlgItemText(hWnd, IDC_EDIT_COPY, word);
             break;
 
+        case ID_BUTTON_CLEAR:
+            SetDlgItemText(hWnd, IDC_EDIT_SOURCE, "");
+            SetDlgItemText(hWnd, IDC_EDIT_COPY, "");
+            break;
 
         case IDOK:
             EndDialog(hWnd, 0);

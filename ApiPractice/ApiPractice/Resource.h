@@ -18,6 +18,12 @@
 #define IDB_BITMAP1                     130
 #define IDB_RUMINE                      131
 #define IDD_DIALOG1                     132
+#define IDC_EDIT_SOURCE                 1000
+#define IDC_EDIT2                       1002
+#define IDC_EDIT_COPY                   1002
+#define ID_BUTTON_CLEAR                 1003
+#define ID_BUTTON_COPY                  1004
+#define IDC_BUTTON_END                  1005
 #define ID_32771                        32771
 #define ID_FILENEW                      32772
 #define ID_32773                        32773
@@ -50,7 +56,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32796
-#define _APS_NEXT_CONTROL_VALUE         1000
+#define _APS_NEXT_CONTROL_VALUE         1004
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif
