@@ -161,21 +161,30 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 INT_PTR CALLBACK Dlg6_lProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc;
+    HWND hButton;
 
     switch (message)
     {
     case WM_INITDIALOG:
-        return 1;
+        hButton = GetDlgItem(hWnd, ID_PAUSE);
+        EnableWindow(hButton, FALSE);
+        break;
     case WM_COMMAND:
         switch (LOWORD(wParam))
         {
-        case ID_BUTTON_PRINT:
-            hdc = GetDC(hWnd);
-            TextOut(hdc, 0, 0, "Hello world!", 11);
-            ReleaseDC(hWnd, hdc);
-            break;;
-
-        case ID_BUTTON_CANCEL:
+        case ID_START:
+            hButton = GetDlgItem(hWnd, ID_START);
+            EnableWindow(hButton, FALSE);
+            hButton = GetDlgItem(hWnd, ID_PAUSE);
+            EnableWindow(hButton, TRUE);
+            break;
+        case ID_PAUSE:
+            hButton = GetDlgItem(hWnd, ID_PAUSE);
+            EnableWindow(hButton, FALSE);
+            hButton = GetDlgItem(hWnd, ID_START);
+            EnableWindow(hButton, TRUE);
+            break;
+        case ID_CLOSE:
             EndDialog(hWnd, 0);
             break;
 
@@ -213,7 +222,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         hBit2 = LoadBitmap(((LPCREATESTRUCT)lParam)->hInstance, MAKEINTRESOURCE(IDB_RUMINE));
         break;
 
-
+    
 
 
     case WM_COMMAND:
@@ -224,6 +233,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+
+        case ID_6_3_DIALOG:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, Dlg6_lProc);
             break;
 
         case ID_EDITCOPY:
@@ -262,6 +275,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         EndPaint(hWnd, &ps);
     }
     break;
+
     
     
 
@@ -301,9 +315,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         InvalidateRgn(hWnd, NULL, TRUE);
         break;
 
-    case WM_LBUTTONDOWN:
-        DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, Dlg6_lProc);
-        break;
     case WM_DESTROY:
         if (hBit1)
             DeleteObject(hBit1);
