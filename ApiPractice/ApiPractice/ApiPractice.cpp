@@ -37,6 +37,22 @@ BOOL InCircle(int x, int y, int mx, int my)
     return FALSE;
 }
 
+void TextPrint(HDC hdc, int x, int y, char text[])
+{
+    SetTextColor(hdc, RGB(255, 255, 255));
+
+    for (int i = -1; i <= 1; i++)
+    {
+        for (int j = -1; j <= 1; j++)
+        {
+            TextOut(hdc, x + i, y + j, text, strlen(text));
+        }
+    }
+
+    SetTextColor(hdc, RGB(0, 0, 0));
+    TextOut(hdc, x, y, text, strlen(text));
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -143,33 +159,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int answer = 0;
-    OPENFILENAME OFN;
-    char str[100], lpstrFile[100] = "";
-    char filter[] = "Every File(*.*) \0*.*\0Text File\0*.txt;*.doc\0";
-    HDC hdc, memdc;
+
+    static HDC hdc, mem1dc, mem2dc;
     PAINTSTRUCT ps;
-
-    CHOOSEFONT FONT;
-    CHOOSECOLOR COLOR;
-    static COLORREF temp[16], color;
-    HFONT hFont, OldFont;
-    static LOGFONT LogFont;
-    HBRUSH hBrush, OldBrush;
-
-    static HMENU hMenu, hSubMenu;
-
-    int mx, my;
-    static BOOL Select;
-    static BOOL Copy;
-    static int x, y;
-
-    static int yPos;
+    static HBITMAP hBit1, hBit2, oldBit1, oldBit2;
     static RECT rectView;
-    static HBITMAP hBit, oldBit;
+    static int yPos;
     char word[] = "테스트테스트123";
-
-    static HBITMAP hBitmap;
 
     switch (message)
     {
@@ -177,17 +173,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         yPos = -30;
         GetClientRect(hWnd, &rectView);
         SetTimer(hWnd, 1, 70, NULL);
-        hBitmap = (HBITMAP)LoadBitmap(((LPCREATESTRUCT)lParam)->hInstance, MAKEINTRESOURCE(IDB_RUMINE));
+        hBit2 = LoadBitmap(((LPCREATESTRUCT)lParam)->hInstance, MAKEINTRESOURCE(IDB_RUMINE));
         break;
 
-    case WM_LBUTTONDOWN:
-        mx = LOWORD(lParam);
-        my = HIWORD(lParam);
-        if (InCircle(x, y, mx, my))
-            Select = TRUE;
 
-        InvalidateRgn(hWnd, NULL, TRUE);
-        break;
 
 
     case WM_COMMAND:
@@ -201,63 +190,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case ID_EDITCOPY:
-            Copy = TRUE;
-            InvalidateRgn(hWnd, NULL, TRUE);
             break;
 
         case ID_COLORDLG:
-            for (int i = 0; i < 16; i++)
-                temp[i] = RGB(rand() % 256, rand() % 256, rand() % 256);
-
-            memset(&COLOR, 0, sizeof(CHOOSECOLOR));
-            COLOR.lStructSize = sizeof(CHOOSECOLOR);
-            COLOR.hwndOwner = hWnd;
-            COLOR.lpCustColors = temp;
-            COLOR.Flags = CC_FULLOPEN;
-            if (ChooseColor(&COLOR) != 0)
-            {
-                color = COLOR.rgbResult;
-                InvalidateRgn(hWnd, NULL, TRUE);
-            }
             break;
 
         case ID_FILENEW:
             MessageBox(hWnd, "새파일?", "새 파일 선택", MB_OKCANCEL);
             break;
         case ID_FILEOPEN:
-            memset(&OFN, 0, sizeof(OPENFILENAME));
-            OFN.lStructSize = sizeof(OPENFILENAME);
-            OFN.hwndOwner = hWnd;
-            OFN.lpstrFilter = filter;
-            OFN.lpstrFile = lpstrFile;
-            OFN.nMaxFile = 100;
-            OFN.lpstrInitialDir = ".";
-            if (GetOpenFileName(&OFN) != 0)
-            {
-                wsprintf(str, "%s 파일을 열겠습니카", OFN.lpstrFile);
-                MessageBox(hWnd, str, "열기 선택", MB_OK);
-            }
             break;
         case ID_FILESAVE:
-            memset(&OFN, 0, sizeof(OPENFILENAME));
-            OFN.lStructSize = sizeof(OPENFILENAME);
-            OFN.hwndOwner = hWnd;
-            OFN.lpstrFilter = filter;
-            OFN.lpstrFile = lpstrFile;
-            OFN.nMaxFile = 100;
-            OFN.lpstrInitialDir = ".";
-            if (GetSaveFileName(&OFN) != 0)
-            {
-                wsprintf(str, "%s 파일을 저장하시겠습니카", OFN.lpstrFile);
-                MessageBox(hWnd, str, "저장하기 선택", MB_OK);
-            }
             break;
 
         case IDM_EXIT:
-
-            answer = MessageBox(hWnd, "파일 선택 확인", "끝내기 선택", MB_YESNO);
-            if (answer == IDYES)
-                DestroyWindow(hWnd);
+            DestroyWindow(hWnd);
             break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
@@ -270,16 +217,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
         // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-        
-        
-
-        memdc = CreateCompatibleDC(hdc);
-        oldBit = (HBITMAP)SelectObject(memdc, hBitmap);
-        BitBlt(hdc, 0, 0, 621, 671, memdc, 0, 0, SRCCOPY);
-        SelectObject(memdc, oldBit);
-        DeleteDC(memdc);
-        TextOut(hdc, 200, yPos, word, strlen(word));
-
+        mem1dc = CreateCompatibleDC(hdc);
+        oldBit1 = (HBITMAP)SelectObject(mem1dc, hBit1);
+        BitBlt(hdc, 0, 0, 1024, 768, mem1dc, 0, 0, SRCCOPY);
+        SelectObject(mem1dc, oldBit1);
+        DeleteDC(mem2dc);
         EndPaint(hWnd, &ps);
     }
     break;
@@ -290,30 +232,45 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_LBUTTONUP:
         break;
     case WM_MOUSEMOVE:
-        hdc = GetDC(hWnd);
-        ReleaseDC(hWnd, hdc);
         break;
     case WM_CHAR:
-        hdc = GetDC(hWnd);
-        ReleaseDC(hWnd, hdc);
         break;
     case WM_KEYDOWN:
 
         InvalidateRgn(hWnd, NULL, TRUE);
         break;
     case WM_TIMER:
-        hdc = GetDC(hWnd);
 
         yPos += 5;
-        if (yPos > rectView.bottom) yPos = -30;
-        
-        
+        if (yPos > rectView.bottom)
+            yPos = -30;
 
+        hdc = GetDC(hWnd);
+        if (hBit1 == NULL)
+            hBit1 = CreateCompatibleBitmap(hdc, 1024, 768);
+        
+        mem1dc = CreateCompatibleDC(hdc);
+        mem2dc = CreateCompatibleDC(mem1dc);
+        oldBit1 = (HBITMAP)SelectObject(mem1dc, hBit1);
+        oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit2);
+        BitBlt(mem1dc, 0, 0, 1024, 768, mem2dc, 0, 0, SRCCOPY);
+        SetBkMode(mem1dc, TRANSPARENT);
+        TextPrint(mem1dc, 200, yPos, word);
+        SelectObject(mem2dc, oldBit2);
+        DeleteDC(mem2dc);
+        SelectObject(mem1dc, oldBit1);
+        DeleteDC(mem1dc);
+        ReleaseDC(hWnd, hdc);
         InvalidateRgn(hWnd, NULL, TRUE);
         break;
     case WM_DESTROY:
-        DeleteObject(hBit);
+        if (hBit1)
+            DeleteObject(hBit1);
+
+        DeleteObject(hBit2);
+
         KillTimer(hWnd, 1);
+        DeleteDC(mem1dc);
         PostQuitMessage(0);
         break;
     default:
