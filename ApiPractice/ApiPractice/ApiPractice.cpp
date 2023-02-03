@@ -164,11 +164,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     static BOOL Copy;
     static int x, y;
 
+    static int yPos;
+    static RECT rectView;
+    static HBITMAP hBit, oldBit;
+    char word[] = "테스트테스트123";
+
     static HBITMAP hBitmap;
 
     switch (message)
     {
     case WM_CREATE:
+        yPos = -30;
+        GetClientRect(hWnd, &rectView);
+        SetTimer(hWnd, 1, 70, NULL);
         hBitmap = (HBITMAP)LoadBitmap(((LPCREATESTRUCT)lParam)->hInstance, MAKEINTRESOURCE(IDB_RUMINE));
         break;
 
@@ -180,6 +188,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         InvalidateRgn(hWnd, NULL, TRUE);
         break;
+
 
     case WM_COMMAND:
     {
@@ -257,15 +266,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_PAINT:
     {
-
+        GetClientRect(hWnd, &rectView);
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
         // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
         
+        
+
         memdc = CreateCompatibleDC(hdc);
-        SelectObject(memdc, hBitmap);
+        oldBit = (HBITMAP)SelectObject(memdc, hBitmap);
         BitBlt(hdc, 0, 0, 621, 671, memdc, 0, 0, SRCCOPY);
+        SelectObject(memdc, oldBit);
         DeleteDC(memdc);
+        TextOut(hdc, 200, yPos, word, strlen(word));
 
         EndPaint(hWnd, &ps);
     }
@@ -291,12 +304,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_TIMER:
         hdc = GetDC(hWnd);
 
+        yPos += 5;
+        if (yPos > rectView.bottom) yPos = -30;
         
         
 
         InvalidateRgn(hWnd, NULL, TRUE);
         break;
     case WM_DESTROY:
+        DeleteObject(hBit);
+        KillTimer(hWnd, 1);
         PostQuitMessage(0);
         break;
     default:
