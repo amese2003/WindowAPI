@@ -157,6 +157,30 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - 종료 메시지를 게시하고 반환합니다.
 //
 //
+
+INT_PTR CALLBACK Dlg6_lProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_INITDIALOG:
+        return 1;
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+            EndDialog(hDlg, 0);
+            break;
+        case IDCANCEL:
+            EndDialog(hDlg, 0);
+            break;
+        }
+
+        break;
+    }
+
+    return 0;
+}
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 
@@ -262,6 +286,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         DeleteDC(mem1dc);
         ReleaseDC(hWnd, hdc);
         InvalidateRgn(hWnd, NULL, TRUE);
+        break;
+
+    case WM_LBUTTONDOWN:
+        DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, About);
         break;
     case WM_DESTROY:
         if (hBit1)
