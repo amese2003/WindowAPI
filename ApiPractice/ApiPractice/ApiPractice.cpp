@@ -216,6 +216,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     static int yPos;
     char word[] = "테스트테스트123";
 
+    HWND hDlg = NULL;
+
     switch (message)
     {
     case WM_CREATE:
@@ -239,7 +241,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case ID_6_3_DIALOG:
-            DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, Dlg6_lProc);
+
+            if (IsWindow(hDlg) == false)
+            {
+                hDlg = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hDlg, Dlg6_lProc);
+                ShowWindow(hDlg, SW_SHOW);
+            }
             break;
 
         case ID_EDITCOPY:
@@ -257,6 +264,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
         case IDM_EXIT:
+            DestroyWindow(hDlg);
             DestroyWindow(hWnd);
             break;
         default:
