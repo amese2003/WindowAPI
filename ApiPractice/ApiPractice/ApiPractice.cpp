@@ -8,6 +8,7 @@
 #include <math.h>
 #include "resource.h"
 #include <commdlg.h>
+#include <stdio.h>
 
 #define MAX_LOADSTRING 100
 #define BSIZE 40
@@ -164,24 +165,39 @@ INT_PTR CALLBACK Dlg6_lProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     HWND hButton;
     char word[100];
 
+    static int Check[3], Radio;
+    char hobby[][30] = { "독서", "음악감상", "인터넷" };
+    char sex[][30] = { "여자", "남자" };
+    char output[200];
+
     switch (message)
     {
     case WM_INITDIALOG:
-        hButton = GetDlgItem(hWnd, ID_PAUSE);
-        EnableWindow(hButton, FALSE);
+        CheckRadioButton(hWnd, IDC_RADIO_FEMALE, IDC_RADIO_MALE, IDC_RADIO_FEMALE);
         break;
     case WM_COMMAND:
         switch (LOWORD(wParam))
         {
-        case ID_BUTTON_COPY:
-            GetDlgItemText(hWnd, IDC_EDIT_SOURCE, word, 100);
-            SetDlgItemText(hWnd, IDC_EDIT_COPY, word);
+        case IDC_CHECK_READING:
+            Check[0] = 1 - Check[0];
+            break;
+        case IDC_CHECK_MUSIC:
+            Check[1] = 1 - Check[1];
+            break;
+        case IDC_CHECK_INTERNET:
+            Check[2] = 1 - Check[2];
+            break;
+        case IDC_RADIO_FEMALE:
+            Radio = 0;
+            break;
+        case IDC_RADIO_MALE:
+            Radio = 1;
+            break;
+        case IDC_BUTTON_OUTPUT:
+            sprintf_s(output, "선택한 취미 : %s %s %s \r\n 선택한 성별은 %s", Check[0] ? hobby[0] : "", Check[1] ? hobby[1] : "", Check[2] ? hobby[2] : "", sex[Radio]);
+            SetDlgItemText(hWnd, IDC_EDIT_OUTPUT, output);
             break;
 
-        case ID_BUTTON_CLEAR:
-            SetDlgItemText(hWnd, IDC_EDIT_SOURCE, "");
-            SetDlgItemText(hWnd, IDC_EDIT_COPY, "");
-            break;
 
         case IDOK:
             EndDialog(hWnd, 0);
