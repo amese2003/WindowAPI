@@ -162,14 +162,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 INT_PTR CALLBACK Dlg6_lProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc;
-    static  HWND hCombo;
+    static  HWND hList;
     static int selection;
     char name[20];
 
     switch (message)
     {
     case WM_INITDIALOG:
-        hCombo = GetDlgItem(hWnd, IDC_COMBO_LIST);
+        hList = GetDlgItem(hWnd, IDC_LIST_NAME);
         break;
     case WM_COMMAND:
         switch (LOWORD(wParam))
@@ -178,17 +178,17 @@ INT_PTR CALLBACK Dlg6_lProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             GetDlgItemText(hWnd, IDC_EDIT_NAME, name, 20);
 
             if (strcmp(name, ""))
-                SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM)name);
+                SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)name);
 
             break;
 
         case IDC_BUTTON_DELETE:
-            SendMessage(hCombo, CB_DELETESTRING, selection, 0);
+            SendMessage(hList, LB_DELETESTRING, selection, 0);
             break;
 
-        case IDC_COMBO_LIST:
-            if (HIWORD(wParam) == CBN_SELCHANGE)
-                selection = SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+        case IDC_LIST_NAME:
+            if (HIWORD(wParam) == LBN_SELCHANGE)
+                selection = SendMessage(hList, LB_GETCURSEL, 0, 0);
             break;
 
 

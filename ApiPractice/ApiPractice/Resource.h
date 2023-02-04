@@ -22,8 +22,7 @@
 #define IDC_BUTTON_END2                 1006
 #define IDC_BUTTON_DELETE               1007
 #define IDC_EDIT_NAME                   1013
-#define IDC_COMBO_LIST                  1014
-#define IDC_COMBO1                      1015
+#define IDC_LIST_NAME                   1016
 #define ID_32771                        32771
 #define ID_FILENEW                      32772
 #define ID_32773                        32773
@@ -56,7 +55,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32796
-#define _APS_NEXT_CONTROL_VALUE         1016
+#define _APS_NEXT_CONTROL_VALUE         1017
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif
