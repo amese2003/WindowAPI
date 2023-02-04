@@ -13,6 +13,7 @@
 
 #define MAX_LOADSTRING 100
 #define BSIZE 40
+#define UNSELECTED -1
 
 // 전역 변수:
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
@@ -87,6 +88,38 @@ int SelectItem(HWND& hWnd, LPARAM lParam)
     ListView_GetItemText(hList, nlv->iItem, 1, phone, 20);
     SetDlgItemText(hWnd, IDC_EDIT_PHONE, phone);
     return nlv->iItem;
+}
+
+void ModifyItem(HWND& hWnd, int selection)
+{
+    LVITEM item;
+    HWND hList;
+    char name[20];
+    char phone[20];
+
+    hList = GetDlgItem(hWnd, IDC_LIST_MEMBER);
+
+    GetDlgItemText(hWnd, IDC_EDIT_NAME, name, 20);
+    GetDlgItemText(hWnd, IDC_EDIT_PHONE, phone, 20);
+
+    if (strcmp(name, "") == 0)
+        return;
+
+    ListView_SetItemText(hList, selection, 0, name);
+    ListView_SetItemText(hList, selection, 1, phone);
+
+    SetDlgItemText(hWnd, IDC_EDIT_NAME, "");
+    SetDlgItemText(hWnd, IDC_EDIT_PHONE, "");
+}
+
+void DeleteItem(HWND& hWnd, int selection)
+{
+    static HWND hList;
+    hList = GetDlgItem(hWnd, IDC_LIST_MEMBER);
+    ListView_DeleteItem(hList, selection);
+    SetDlgItemText(hWnd, IDC_EDIT_NAME, "");
+    SetDlgItemText(hWnd, IDC_EDIT_PHONE, "");
+    return;
 }
 
 double LengthPts(int x1, int y1, int x2, int y2)
@@ -229,11 +262,22 @@ INT_PTR CALLBACK Dlg6_lProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     HWND hList;
     HDC hdc;
 
+    static int selection;
+
     switch (message)
     {
     case WM_INITDIALOG:
+        selection = UNSELECTED;
         MakeColumn(hWnd);
         break;
+
+    case WM_NOTIFY:
+        hdr = (LPNMHDR)lParam;
+        hList = GetDlgItem(hWnd, IDC_LIST_MEMBER);
+        if (hdr->hwndFrom == hList && hdr->code == LVN_ITEMCHANGING)
+            selection = SelectItem(hWnd, lParam);
+        break;
+
     case WM_COMMAND:
         switch (LOWORD(wParam))
         {
@@ -241,11 +285,22 @@ INT_PTR CALLBACK Dlg6_lProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
             InsertData(hWnd);
             break;
 
-        case WM_NOTIFY:
-            hdr = (LPNMHDR)lParam;
-            hList = GetDlgItem(hWnd, IDC_LIST_MEMBER);
-            if (hdr->hwndFrom == hList && hdr->code == LVN_ITEMCHANGING)
-                SelectItem(hWnd, lParam);
+        
+
+        case IDC_BUTTON_MODIFY:
+            if (selection == UNSELECTED)
+                break;
+
+            ModifyItem(hWnd, selection);
+            selection = UNSELECTED;
+            break;
+
+        case IDC_BUTTON_DELETE:
+            if (selection == UNSELECTED)
+                break;
+            
+            DeleteItem(hWnd, selection);
+            selection = UNSELECTED;
             break;
 
 

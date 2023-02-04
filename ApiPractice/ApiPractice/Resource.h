@@ -21,9 +21,9 @@
 #define IDC_BUTTON_END2                 1006
 #define IDC_BUTTON_DELETE               1007
 #define IDC_BUTTON_INSERT               1008
+#define IDC_BUTTON_MODIFY               1009
 #define IDC_LIST_MEMBER                 1017
 #define IDC_EDIT_NAME                   1018
-#define IDC_EDIT2                       1019
 #define IDC_EDIT_PHONE                  1019
 #define ID_32771                        32771
 #define ID_FILENEW                      32772
