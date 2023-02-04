@@ -9,6 +9,7 @@
 #include "resource.h"
 #include <commdlg.h>
 #include <stdio.h>
+#include <CommCtrl.h>
 
 #define MAX_LOADSTRING 100
 #define BSIZE 40
@@ -24,6 +25,69 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
+void MakeColumn(HWND& hWnd)
+{
+    char name[2][30] = { "이름", "전화번호" };
+    LVCOLUMN lvCol = {0,};
+    HWND hList;
+    int i;
+    hList = GetDlgItem(hWnd, IDC_LIST_MEMBER);
+    lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+    lvCol.fmt = LVCFMT_LEFT;
+
+    for (i = 0; i < 2; i++)
+    {
+        lvCol.cx = 90;
+        lvCol.pszText = name[i];
+        lvCol.iSubItem = i;
+        SendMessage(hList, LVM_INSERTCOLUMN, (WPARAM)1, (LPARAM)&lvCol);
+    }
+}
+
+void InsertData(HWND& hWnd)
+{
+    LVITEM item;
+    HWND hList;
+    char name[20];
+    char phone[20];
+
+    int count = 0;
+
+    int i;
+    GetDlgItemText(hWnd, IDC_EDIT_NAME, name, 20);
+    SetDlgItemText(hWnd, IDC_EDIT_NAME, "");
+
+    if (strcmp(name, "") == 0)
+        return;
+
+
+    GetDlgItemText(hWnd, IDC_EDIT_PHONE, phone, 20);
+    SetDlgItemText(hWnd, IDC_EDIT_PHONE, "");
+
+    hList = GetDlgItem(hWnd, IDC_LIST_MEMBER);
+    count = ListView_GetItemCount(hList);
+    item.mask = LVIF_TEXT;
+    item.iItem = count;
+    item.iSubItem = 0;
+    item.pszText = name;
+    ListView_InsertItem(hList, &item);
+    ListView_SetItemText(hList, count, 1, phone);
+
+}
+
+int SelectItem(HWND& hWnd, LPARAM lParam)
+{
+    LPNMLISTVIEW nlv;
+    HWND hList;
+    char name[20], phone[20];
+    hList = GetDlgItem(hWnd, IDC_LIST_MEMBER);
+    nlv = (LPNMLISTVIEW)lParam;
+    ListView_GetItemText(hList, nlv->iItem, 0, name, 20);
+    SetDlgItemText(hWnd, IDC_EDIT_NAME, name);
+    ListView_GetItemText(hList, nlv->iItem, 1, phone, 20);
+    SetDlgItemText(hWnd, IDC_EDIT_PHONE, phone);
+    return nlv->iItem;
+}
 
 double LengthPts(int x1, int y1, int x2, int y2)
 {
@@ -161,34 +225,27 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 INT_PTR CALLBACK Dlg6_lProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    LPNMHDR hdr;
+    HWND hList;
     HDC hdc;
-    static  HWND hList;
-    static int selection;
-    char name[20];
 
     switch (message)
     {
     case WM_INITDIALOG:
-        hList = GetDlgItem(hWnd, IDC_LIST_NAME);
+        MakeColumn(hWnd);
         break;
     case WM_COMMAND:
         switch (LOWORD(wParam))
         {
         case IDC_BUTTON_INSERT:
-            GetDlgItemText(hWnd, IDC_EDIT_NAME, name, 20);
-
-            if (strcmp(name, ""))
-                SendMessage(hList, LB_ADDSTRING, 0, (LPARAM)name);
-
+            InsertData(hWnd);
             break;
 
-        case IDC_BUTTON_DELETE:
-            SendMessage(hList, LB_DELETESTRING, selection, 0);
-            break;
-
-        case IDC_LIST_NAME:
-            if (HIWORD(wParam) == LBN_SELCHANGE)
-                selection = SendMessage(hList, LB_GETCURSEL, 0, 0);
+        case WM_NOTIFY:
+            hdr = (LPNMHDR)lParam;
+            hList = GetDlgItem(hWnd, IDC_LIST_MEMBER);
+            if (hdr->hwndFrom == hList && hdr->code == LVN_ITEMCHANGING)
+                SelectItem(hWnd, lParam);
             break;
 
 

@@ -18,11 +18,13 @@
 #define IDB_BITMAP1                     130
 #define IDB_RUMINE                      131
 #define IDD_DIALOG1                     132
-#define IDC_BUTTON_INSERT               1005
 #define IDC_BUTTON_END2                 1006
 #define IDC_BUTTON_DELETE               1007
-#define IDC_EDIT_NAME                   1013
-#define IDC_LIST_NAME                   1016
+#define IDC_BUTTON_INSERT               1008
+#define IDC_LIST_MEMBER                 1017
+#define IDC_EDIT_NAME                   1018
+#define IDC_EDIT2                       1019
+#define IDC_EDIT_PHONE                  1019
 #define ID_32771                        32771
 #define ID_FILENEW                      32772
 #define ID_32773                        32773
@@ -55,7 +57,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32796
-#define _APS_NEXT_CONTROL_VALUE         1017
+#define _APS_NEXT_CONTROL_VALUE         1019
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif
