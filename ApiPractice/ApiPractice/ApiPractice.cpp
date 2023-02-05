@@ -24,6 +24,7 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름�
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK    ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 void MakeColumn(HWND& hWnd)
@@ -212,7 +213,14 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_APIPRACTICE);
     wcex.lpszClassName  = szWindowClass;
+    //wcex.lpszClassName =  L"Window Class Name";
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    RegisterClassExW(&wcex);
+
+    wcex.lpfnWndProc = ChildWndProc;
+    wcex.lpszMenuName = NULL;
+    wcex.lpszClassName = L"Child Window";
+
 
     return RegisterClassExW(&wcex);
 }
@@ -318,25 +326,37 @@ INT_PTR CALLBACK Dlg6_lProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
     return 0;
 }
 
+LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_CREATE:
+        break;
+    case WM_DESTROY:
+        break;
+    }
+
+    return DefMDIChildProc(hWnd, message, wParam, lParam);
+}
+
+
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 
-    static HDC hdc, mem1dc, mem2dc;
-    PAINTSTRUCT ps;
-    static HBITMAP hBit1, hBit2, oldBit1, oldBit2;
-    static RECT rectView;
-    static int yPos;
-    char word[] = "테스트테스트123";
+    static HWND hWndClient;
+    CLIENTCREATESTRUCT clientcreate;
+    MDICREATESTRUCT mdicreate;
+    HWND hWndChild;
 
     HWND hDlg = NULL;
 
     switch (message)
     {
     case WM_CREATE:
-        yPos = -30;
-        GetClientRect(hWnd, &rectView);
-        SetTimer(hWnd, 1, 70, NULL);
-        hBit2 = LoadBitmap(((LPCREATESTRUCT)lParam)->hInstance, MAKEINTRESOURCE(IDB_RUMINE));
+        clientcreate.hWindowMenu = GetSubMenu(GetMenu(hWnd), 0);
+        clientcreate.idFirstChild = 100;
+        hWndClient = CreateWindow("MDICLIENT", NULL, WS_CHILD | WS_CLIPCHILDREN | WS_VISIBLE, 0, 0, 0, 0, hWnd, NULL, hInst, (LPSTR) &clientcreate);
+        ShowWindow(hWndClient, SW_SHOW);
         break;
 
     
@@ -361,22 +381,31 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
             break;
 
+        case ID_FILENEW:
+            mdicreate.szClass = "Child Window Class Name";
+            mdicreate.szTitle = "Child Window Title Name";
+            mdicreate.hOwner = hInst;
+            mdicreate.x = CW_USEDEFAULT;
+            mdicreate.y = CW_USEDEFAULT;
+            mdicreate.cx = CW_USEDEFAULT;
+            mdicreate.cy = CW_USEDEFAULT;
+            mdicreate.style = 0;
+            mdicreate.lParam = 0;
+            hWndChild = (HWND)SendMessage(hWndClient, WM_MDICREATE, 0, (LPARAM)(LPMDICREATESTRUCT) &mdicreate);
+            return 0;
+
         case ID_EDITCOPY:
             break;
 
         case ID_COLORDLG:
             break;
 
-        case ID_FILENEW:
-            MessageBox(hWnd, "새파일?", "새 파일 선택", MB_OKCANCEL);
-            break;
         case ID_FILEOPEN:
             break;
         case ID_FILESAVE:
             break;
 
         case IDM_EXIT:
-            DestroyWindow(hDlg);
             DestroyWindow(hWnd);
             break;
         default:
@@ -386,15 +415,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_PAINT:
     {
-        GetClientRect(hWnd, &rectView);
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
         // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
-        mem1dc = CreateCompatibleDC(hdc);
-        oldBit1 = (HBITMAP)SelectObject(mem1dc, hBit1);
-        BitBlt(hdc, 0, 0, 1024, 768, mem1dc, 0, 0, SRCCOPY);
-        SelectObject(mem1dc, oldBit1);
-        DeleteDC(mem2dc);
+
         EndPaint(hWnd, &ps);
     }
     break;
@@ -414,38 +438,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         InvalidateRgn(hWnd, NULL, TRUE);
         break;
     case WM_TIMER:
-
-        yPos += 5;
-        if (yPos > rectView.bottom)
-            yPos = -30;
-
-        hdc = GetDC(hWnd);
-        if (hBit1 == NULL)
-            hBit1 = CreateCompatibleBitmap(hdc, 1024, 768);
-        
-        mem1dc = CreateCompatibleDC(hdc);
-        mem2dc = CreateCompatibleDC(mem1dc);
-        oldBit1 = (HBITMAP)SelectObject(mem1dc, hBit1);
-        oldBit2 = (HBITMAP)SelectObject(mem2dc, hBit2);
-        BitBlt(mem1dc, 0, 0, 1024, 768, mem2dc, 0, 0, SRCCOPY);
-        SetBkMode(mem1dc, TRANSPARENT);
-        TextPrint(mem1dc, 200, yPos, word);
-        SelectObject(mem2dc, oldBit2);
-        DeleteDC(mem2dc);
-        SelectObject(mem1dc, oldBit1);
-        DeleteDC(mem1dc);
-        ReleaseDC(hWnd, hdc);
-        InvalidateRgn(hWnd, NULL, TRUE);
         break;
 
     case WM_DESTROY:
-        if (hBit1)
-            DeleteObject(hBit1);
 
-        DeleteObject(hBit2);
-
-        KillTimer(hWnd, 1);
-        DeleteDC(mem1dc);
         PostQuitMessage(0);
         break;
     default:
