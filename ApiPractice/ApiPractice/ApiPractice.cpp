@@ -23,6 +23,7 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름�
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
+BOOL WINAPI InitializeApplication(HINSTANCE hInstance);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK    ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
@@ -165,7 +166,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // 전역 문자열을 초기화합니다.
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_APIPRACTICE, szWindowClass, MAX_LOADSTRING);
-    MyRegisterClass(hInstance);
+    //MyRegisterClass(hInstance);
+    InitializeApplication(hInstance);
 
     // 애플리케이션 초기화를 수행합니다:
     if (!InitInstance (hInstance, nCmdShow))
@@ -197,6 +199,38 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 //
 //  용도: 창 클래스를 등록합니다.
 //
+BOOL WINAPI InitializeApplication(HINSTANCE hInstance)
+{
+    WNDCLASS wc;
+
+    // Register the frame window class. 
+
+    wc.style = 0;
+    wc.lpfnWndProc = WndProc;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
+    wc.hInstance = hInst;
+    wc.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APIPRACTICE));
+    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wc.hbrBackground = (HBRUSH)(COLOR_APPWORKSPACE + 1);
+    wc.lpszMenuName = MAKEINTRESOURCE(IDC_APIPRACTICE);
+    wc.lpszClassName = "Window Class Name";
+
+    if (!RegisterClass(&wc))
+        return FALSE;
+
+    // Register the MDI child window class. 
+
+    wc.lpfnWndProc = ChildWndProc;
+    wc.lpszMenuName = (LPCTSTR)NULL;
+    wc.lpszClassName = "Child Window Class Name";
+
+    if (!RegisterClass(&wc))
+        return FALSE;
+
+    return TRUE;
+}
+
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex;
@@ -213,14 +247,12 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
     wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_APIPRACTICE);
     wcex.lpszClassName  = szWindowClass;
-    //wcex.lpszClassName =  L"Window Class Name";
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
     RegisterClassExW(&wcex);
 
     wcex.lpfnWndProc = ChildWndProc;
     wcex.lpszMenuName = NULL;
-    wcex.lpszClassName = L"Child Window";
-
+    wcex.lpszClassName = L"Child Window Class Name";
 
     return RegisterClassExW(&wcex);
 }
@@ -239,8 +271,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+   /*HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);*/
+
+   HWND hWnd = CreateWindow("Window Class Name", "Main Window Ttile", WS_OVERLAPPEDWINDOW,
+       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
    {
@@ -263,68 +298,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - 종료 메시지를 게시하고 반환합니다.
 //
 //
-
-INT_PTR CALLBACK Dlg6_lProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    LPNMHDR hdr;
-    HWND hList;
-    HDC hdc;
-
-    static int selection;
-
-    switch (message)
-    {
-    case WM_INITDIALOG:
-        selection = UNSELECTED;
-        MakeColumn(hWnd);
-        break;
-
-    case WM_NOTIFY:
-        hdr = (LPNMHDR)lParam;
-        hList = GetDlgItem(hWnd, IDC_LIST_MEMBER);
-        if (hdr->hwndFrom == hList && hdr->code == LVN_ITEMCHANGING)
-            selection = SelectItem(hWnd, lParam);
-        break;
-
-    case WM_COMMAND:
-        switch (LOWORD(wParam))
-        {
-        case IDC_BUTTON_INSERT:
-            InsertData(hWnd);
-            break;
-
-        
-
-        case IDC_BUTTON_MODIFY:
-            if (selection == UNSELECTED)
-                break;
-
-            ModifyItem(hWnd, selection);
-            selection = UNSELECTED;
-            break;
-
-        case IDC_BUTTON_DELETE:
-            if (selection == UNSELECTED)
-                break;
-            
-            DeleteItem(hWnd, selection);
-            selection = UNSELECTED;
-            break;
-
-
-        case IDOK:
-            EndDialog(hWnd, 0);
-            break;
-        case IDCANCEL:
-            EndDialog(hWnd, 0);
-            break;
-        }
-
-        break;
-    }
-
-    return 0;
-}
 
 LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -355,12 +328,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
         clientcreate.hWindowMenu = GetSubMenu(GetMenu(hWnd), 0);
         clientcreate.idFirstChild = 100;
-        hWndClient = CreateWindow("MDICLIENT", NULL, WS_CHILD | WS_CLIPCHILDREN | WS_VISIBLE, 0, 0, 0, 0, hWnd, NULL, hInst, (LPSTR) &clientcreate);
+        hWndClient = CreateWindow("MDICLIENT", (LPCTSTR)NULL,
+            WS_CHILD | WS_CLIPCHILDREN | WS_VSCROLL | WS_HSCROLL,
+            0, 0, 0, 0, hWnd, (HMENU)0xCAC, hInst, (LPSTR)&clientcreate);
         ShowWindow(hWndClient, SW_SHOW);
         break;
-
-    
-
 
     case WM_COMMAND:
     {
@@ -372,14 +344,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
 
-        case ID_6_3_DIALOG:
-
-            if (IsWindow(hDlg) == false)
-            {
-                hDlg = CreateDialog(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hDlg, Dlg6_lProc);
-                ShowWindow(hDlg, SW_SHOW);
-            }
-            break;
 
         case ID_FILENEW:
             mdicreate.szClass = "Child Window Class Name";
