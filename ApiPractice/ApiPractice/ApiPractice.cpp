@@ -317,21 +317,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 
     static HWND hWndClient;
-    CLIENTCREATESTRUCT clientcreate;
-    MDICREATESTRUCT mdicreate;
     HWND hWndChild;
+    HANDLE hFile;
+    char InBuff[1000];
+    char OutBuff[100] = "API API API!";
+    DWORD size;
+    HDC hdc;
 
     HWND hDlg = NULL;
 
     switch (message)
     {
     case WM_CREATE:
-        clientcreate.hWindowMenu = GetSubMenu(GetMenu(hWnd), 0);
-        clientcreate.idFirstChild = 100;
-        hWndClient = CreateWindow("MDICLIENT", (LPCTSTR)NULL,
-            WS_CHILD | WS_CLIPCHILDREN | WS_VSCROLL | WS_HSCROLL,
-            0, 0, 0, 0, hWnd, (HMENU)0xCAC, hInst, (LPSTR)&clientcreate);
-        ShowWindow(hWndClient, SW_SHOW);
+
         break;
 
     case WM_COMMAND:
@@ -345,18 +343,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
 
 
-        case ID_FILENEW:
-            mdicreate.szClass = "Child Window Class Name";
-            mdicreate.szTitle = "Child Window Title Name";
-            mdicreate.hOwner = hInst;
-            mdicreate.x = CW_USEDEFAULT;
-            mdicreate.y = CW_USEDEFAULT;
-            mdicreate.cx = CW_USEDEFAULT;
-            mdicreate.cy = CW_USEDEFAULT;
-            mdicreate.style = 0;
-            mdicreate.lParam = 0;
-            hWndChild = (HWND)SendMessage(hWndClient, WM_MDICREATE, 0, (LPARAM)(LPMDICREATESTRUCT) &mdicreate);
-            return 0;
 
         case ID_EDITCOPY:
             break;
@@ -387,7 +373,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     break;
 
-    
+    case WM_LBUTTONDOWN:
+        hFile = CreateFile(
+            "test1.txt",
+            GENERIC_READ | GENERIC_WRITE,
+            FILE_SHARE_READ | FILE_SHARE_WRITE,
+            NULL, OPEN_EXISTING, 0, 0
+        );
+
+        memset(InBuff, 0, 999 * sizeof(char));
+        ReadFile(hFile, InBuff, (int)strlen(InBuff), &size, NULL);
+        hdc = GetDC(hWnd);
+        TextOut(hdc, 0, 0, InBuff, (int)strlen(InBuff));
+        ReleaseDC(hWnd, hdc);
+        WriteFile(hFile, OutBuff, (DWORD)strlen(OutBuff) * 2, &size, NULL);
+        CloseHandle(hFile);
+        break;
     
 
     
