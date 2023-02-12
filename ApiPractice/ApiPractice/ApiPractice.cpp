@@ -20,6 +20,10 @@ HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 
+HWND  hwndChild[100];
+char WinBuff[100][1000];
+int WndCount;
+
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
@@ -27,6 +31,22 @@ BOOL WINAPI InitializeApplication(HINSTANCE hInstance);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK    ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
+void ReadFromFile(int WndIndex, char fileName[])
+{
+    HANDLE hFile;
+    DWORD size = 1000;
+    hFile = CreateFile(
+        fileName,
+        GENERIC_READ,
+        FILE_SHARE_READ,
+        NULL, OPEN_EXISTING, 0, 0
+    );
+    ReadFile(hFile, WinBuff[WndIndex], size, &size, NULL);
+    WinBuff[WndIndex][size] = NULL;
+    CloseHandle(hFile);
+
+}
 
 void MakeColumn(HWND& hWnd)
 {
@@ -324,7 +344,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     DWORD size;
     HDC hdc;
 
+    int i, SelectWnd;
+
     HWND hDlg = NULL;
+
+    for (i = 1; i <= WndCount; i++)
+    {
+        if (hWnd == hwndChild[i])
+        {
+            SelectWnd = i;
+            break;
+        }
+    }
 
     switch (message)
     {
@@ -340,6 +371,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+
+        case ID_FILENEW:
             break;
 
 
@@ -374,20 +408,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
 
     case WM_LBUTTONDOWN:
-        hFile = CreateFile(
-            "test1.txt",
-            GENERIC_READ | GENERIC_WRITE,
-            FILE_SHARE_READ | FILE_SHARE_WRITE,
-            NULL, OPEN_EXISTING, 0, 0
-        );
-
-        memset(InBuff, 0, 999 * sizeof(char));
-        ReadFile(hFile, InBuff, (int)strlen(InBuff), &size, NULL);
-        hdc = GetDC(hWnd);
-        TextOut(hdc, 0, 0, InBuff, (int)strlen(InBuff));
-        ReleaseDC(hWnd, hdc);
-        WriteFile(hFile, OutBuff, (DWORD)strlen(OutBuff) * 2, &size, NULL);
-        CloseHandle(hFile);
+        
         break;
     
 
