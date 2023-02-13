@@ -10,19 +10,21 @@
 #include <commdlg.h>
 #include <stdio.h>
 #include <CommCtrl.h>
+#include <process.h>
+#include <time.h>
+
 
 #define MAX_LOADSTRING 100
 #define BSIZE 40
 #define UNSELECTED -1
+#define THREAD_NUM 10
 
 // 전역 변수:
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 
-HWND  hwndChild[100];
-char WinBuff[100][1000];
-int WndCount;
+HWND G_hWnd;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -32,146 +34,26 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK    ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-void ReadFromFile(int WndIndex, char fileName[])
+void ThreadProc()
 {
-    HANDLE hFile;
-    DWORD size = 1000;
-    hFile = CreateFile(
-        fileName,
-        GENERIC_READ,
-        FILE_SHARE_READ,
-        NULL, OPEN_EXISTING, 0, 0
-    );
-    ReadFile(hFile, WinBuff[WndIndex], size, &size, NULL);
-    WinBuff[WndIndex][size] = NULL;
-    CloseHandle(hFile);
-
-}
-
-void MakeColumn(HWND& hWnd)
-{
-    char name[2][30] = { "이름", "전화번호" };
-    LVCOLUMN lvCol = {0,};
-    HWND hList;
+    HDC hdc;
     int i;
-    hList = GetDlgItem(hWnd, IDC_LIST_MEMBER);
-    lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-    lvCol.fmt = LVCFMT_LEFT;
+    srand((unsigned)time(0));
+    hdc = GetDC(G_hWnd);
+    SelectObject(hdc, CreateSolidBrush(RGB(rand() % 256, rand() % 256, rand() % 256)));
 
-    for (i = 0; i < 2; i++)
+    for (int i = 0; i < 10; i++)
     {
-        lvCol.cx = 90;
-        lvCol.pszText = name[i];
-        lvCol.iSubItem = i;
-        SendMessage(hList, LVM_INSERTCOLUMN, (WPARAM)1, (LPARAM)&lvCol);
+        int num;
+        num = rand() % 500;
+        Sleep(3000);
+        Rectangle(hdc, 0, 0, 20, num);
     }
-}
 
-void InsertData(HWND& hWnd)
-{
-    LVITEM item;
-    HWND hList;
-    char name[20];
-    char phone[20];
-
-    int count = 0;
-
-    int i;
-    GetDlgItemText(hWnd, IDC_EDIT_NAME, name, 20);
-    SetDlgItemText(hWnd, IDC_EDIT_NAME, "");
-
-    if (strcmp(name, "") == 0)
-        return;
-
-
-    GetDlgItemText(hWnd, IDC_EDIT_PHONE, phone, 20);
-    SetDlgItemText(hWnd, IDC_EDIT_PHONE, "");
-
-    hList = GetDlgItem(hWnd, IDC_LIST_MEMBER);
-    count = ListView_GetItemCount(hList);
-    item.mask = LVIF_TEXT;
-    item.iItem = count;
-    item.iSubItem = 0;
-    item.pszText = name;
-    ListView_InsertItem(hList, &item);
-    ListView_SetItemText(hList, count, 1, phone);
-
-}
-
-int SelectItem(HWND& hWnd, LPARAM lParam)
-{
-    LPNMLISTVIEW nlv;
-    HWND hList;
-    char name[20], phone[20];
-    hList = GetDlgItem(hWnd, IDC_LIST_MEMBER);
-    nlv = (LPNMLISTVIEW)lParam;
-    ListView_GetItemText(hList, nlv->iItem, 0, name, 20);
-    SetDlgItemText(hWnd, IDC_EDIT_NAME, name);
-    ListView_GetItemText(hList, nlv->iItem, 1, phone, 20);
-    SetDlgItemText(hWnd, IDC_EDIT_PHONE, phone);
-    return nlv->iItem;
-}
-
-void ModifyItem(HWND& hWnd, int selection)
-{
-    LVITEM item;
-    HWND hList;
-    char name[20];
-    char phone[20];
-
-    hList = GetDlgItem(hWnd, IDC_LIST_MEMBER);
-
-    GetDlgItemText(hWnd, IDC_EDIT_NAME, name, 20);
-    GetDlgItemText(hWnd, IDC_EDIT_PHONE, phone, 20);
-
-    if (strcmp(name, "") == 0)
-        return;
-
-    ListView_SetItemText(hList, selection, 0, name);
-    ListView_SetItemText(hList, selection, 1, phone);
-
-    SetDlgItemText(hWnd, IDC_EDIT_NAME, "");
-    SetDlgItemText(hWnd, IDC_EDIT_PHONE, "");
-}
-
-void DeleteItem(HWND& hWnd, int selection)
-{
-    static HWND hList;
-    hList = GetDlgItem(hWnd, IDC_LIST_MEMBER);
-    ListView_DeleteItem(hList, selection);
-    SetDlgItemText(hWnd, IDC_EDIT_NAME, "");
-    SetDlgItemText(hWnd, IDC_EDIT_PHONE, "");
+    ReleaseDC(G_hWnd, hdc);
     return;
 }
 
-double LengthPts(int x1, int y1, int x2, int y2)
-{
-    return (sqrt((float)((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1))));
-}
-
-BOOL InCircle(int x, int y, int mx, int my)
-{
-    if (LengthPts(x, y, mx, my) < BSIZE)
-        return TRUE;
-
-    return FALSE;
-}
-
-void TextPrint(HDC hdc, int x, int y, char text[])
-{
-    SetTextColor(hdc, RGB(255, 255, 255));
-
-    for (int i = -1; i <= 1; i++)
-    {
-        for (int j = -1; j <= 1; j++)
-        {
-            TextOut(hdc, x + i, y + j, text, strlen(text));
-        }
-    }
-
-    SetTextColor(hdc, RGB(0, 0, 0));
-    TextOut(hdc, x, y, text, strlen(text));
-}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -335,32 +217,14 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    static HANDLE hThread[THREAD_NUM];
+    int i;
 
-    static HWND hWndClient;
-    HWND hWndChild;
-    HANDLE hFile;
-    char InBuff[1000];
-    char OutBuff[100] = "API API API!";
-    DWORD size;
-    HDC hdc;
-
-    int i, SelectWnd;
-
-    HWND hDlg = NULL;
-
-    for (i = 1; i <= WndCount; i++)
-    {
-        if (hWnd == hwndChild[i])
-        {
-            SelectWnd = i;
-            break;
-        }
-    }
 
     switch (message)
     {
     case WM_CREATE:
-
+        G_hWnd = hWnd;
         break;
 
     case WM_COMMAND:
@@ -408,6 +272,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
 
     case WM_LBUTTONDOWN:
+        for (int i = 0; i < THREAD_NUM; i++)
+        {
+            hThread[i] = (HANDLE)_beginthreadex(NULL, 0, (unsigned int(__stdcall*)(void*))ThreadProc, NULL, 0, NULL);
+            Sleep(2000);
+        }
         
         break;
     
@@ -427,6 +296,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_DESTROY:
+        for (int i = 0; i < THREAD_NUM; i++)
+            CloseHandle(hThread[i]);
 
         PostQuitMessage(0);
         break;
