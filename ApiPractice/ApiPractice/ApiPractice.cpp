@@ -25,6 +25,7 @@ WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 
 HWND G_hWnd;
+int G_Max;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -34,10 +35,11 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK    ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-void ThreadProc()
+void ThreadProc(void* arg)
 {
     HDC hdc;
     int i;
+    int xPos = *((int*)arg);
     srand((unsigned)time(0));
     hdc = GetDC(G_hWnd);
     SelectObject(hdc, CreateSolidBrush(RGB(rand() % 256, rand() % 256, rand() % 256)));
@@ -46,8 +48,15 @@ void ThreadProc()
     {
         int num;
         num = rand() % 500;
-        Sleep(3000);
-        Rectangle(hdc, 0, 0, 20, num);
+
+        if (num > G_Max)
+        {
+            Sleep(3000);
+            G_Max = num;
+            Rectangle(hdc, xPos, 0, xPos + 20, num);
+        }
+
+       
     }
 
     ReleaseDC(G_hWnd, hdc);
@@ -218,12 +227,16 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static HANDLE hThread[THREAD_NUM];
+    static int xPos[THREAD_NUM];
     int i;
 
 
     switch (message)
     {
     case WM_CREATE:
+        for (i = 0; i < THREAD_NUM; i++)
+            xPos[i] = i * 100;
+        G_Max = 0;
         G_hWnd = hWnd;
         break;
 
@@ -274,7 +287,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_LBUTTONDOWN:
         for (int i = 0; i < THREAD_NUM; i++)
         {
-            hThread[i] = (HANDLE)_beginthreadex(NULL, 0, (unsigned int(__stdcall*)(void*))ThreadProc, NULL, 0, NULL);
+            hThread[i] = (HANDLE)_beginthreadex(NULL, 0, (unsigned int(__stdcall*)(void*))ThreadProc, (void *)&xPos[i], 0, NULL);
             Sleep(2000);
         }
         
