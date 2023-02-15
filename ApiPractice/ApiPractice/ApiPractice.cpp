@@ -24,6 +24,7 @@ HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 
+HANDLE hEvent;
 HWND G_hWnd;
 int G_Max;
 
@@ -47,6 +48,7 @@ void ThreadProc(void* arg)
     for (int i = 0; i < 10; i++)
     {
         int num;
+        WaitForSingleObject(hEvent, INFINITE);
         num = rand() % 500;
 
         if (num > G_Max)
@@ -56,7 +58,7 @@ void ThreadProc(void* arg)
             Rectangle(hdc, xPos, 0, xPos + 20, num);
         }
 
-       
+        SetEvent(hEvent);
     }
 
     ReleaseDC(G_hWnd, hdc);
@@ -285,12 +287,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
 
     case WM_LBUTTONDOWN:
+        hEvent = CreateEvent(NULL, FALSE, TRUE, NULL);
         for (int i = 0; i < THREAD_NUM; i++)
         {
             hThread[i] = (HANDLE)_beginthreadex(NULL, 0, (unsigned int(__stdcall*)(void*))ThreadProc, (void *)&xPos[i], 0, NULL);
             Sleep(2000);
         }
         
+        WaitForMultipleObjects(THREAD_NUM, hThread, TRUE, INFINITE);
+        CloseHandle(hEvent);
         break;
     
 
